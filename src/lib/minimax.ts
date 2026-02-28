@@ -21,7 +21,9 @@ export async function minimaxChat(
 ): Promise<string> {
   const { model = "abab6.5s-chat", temperature = 0.3, max_tokens = 1024 } = options;
 
-  const res = await fetch(`${MINIMAX_BASE_URL}/text/chatcompletion_v2`, {
+  const res = await fetch(
+    `${MINIMAX_BASE_URL}/text/chatcompletion_v2?GroupId=${process.env.MINIMAX_GROUP_ID}`,
+    {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -41,6 +43,15 @@ export async function minimaxChat(
   }
 
   const data = await res.json();
+
+  if (data.base_resp?.status_code !== 0) {
+    throw new Error(`MiniMax error ${data.base_resp?.status_code}: ${data.base_resp?.status_msg}`);
+  }
+
+  if (!data.choices?.length) {
+    throw new Error(`MiniMax returned no choices. Full response: ${JSON.stringify(data)}`);
+  }
+
   return data.choices[0].message.content as string;
 }
 

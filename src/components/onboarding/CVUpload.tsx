@@ -27,14 +27,18 @@ export function CVUpload({ onComplete }: CVUploadProps) {
       formData.append("file", file);
 
       const res = await fetch("/api/parse-cv", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Failed to parse CV");
+      const data = await res.json();
 
-      const data: CVData = await res.json();
-      setCvData(data);
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to parse CV");
+      }
+
+      setCvData(data as CVData);
       setStatus("parsed");
-    } catch {
+    } catch (err) {
       setStatus("error");
-      setErrorMsg("Could not parse your CV. Please try a different file.");
+      const msg = err instanceof Error ? err.message : "Could not parse your CV.";
+      setErrorMsg(msg);
     }
   }, []);
 
