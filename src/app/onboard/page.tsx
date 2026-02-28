@@ -7,7 +7,6 @@ import { Progress } from "@/components/ui/progress";
 import { CVUpload } from "@/components/onboarding/CVUpload";
 import { PersonalityQuestions } from "@/components/onboarding/PersonalityQuestions";
 import { InterestsForm } from "@/components/onboarding/InterestsForm";
-import { createClient } from "@/lib/supabase";
 import { CVData, OnboardingStep, PersonalityAnswers } from "@/types";
 
 const STEPS: OnboardingStep[] = ["cv", "personality", "interests", "processing"];
@@ -33,16 +32,11 @@ export default function OnboardPage() {
   const progress = ((stepIndex + 1) / STEPS.length) * 100;
 
   useEffect(() => {
-    createClient()
-      .auth.getSession()
-      .then(({ data }) => {
-        if (data.session?.user) {
-          setUserId(data.session.user.id);
-        } else {
-          router.replace("/auth");
-        }
-      });
-  }, [router]);
+    // Fresh session every time — no persistent auth
+    const id = crypto.randomUUID();
+    sessionStorage.setItem("pfhk_session_id", id);
+    setUserId(id);
+  }, []);
 
   // Cycle processing messages every second
   useEffect(() => {

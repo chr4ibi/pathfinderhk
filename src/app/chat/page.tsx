@@ -6,7 +6,6 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase";
 
 const STARTER_QUESTIONS = [
   "What are my strongest career paths?",
@@ -116,15 +115,12 @@ export default function ChatPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    createClient()
-      .auth.getSession()
-      .then(({ data }) => {
-        if (data.session?.user) {
-          setUserId(data.session.user.id);
-        } else {
-          router.replace("/auth");
-        }
-      });
+    const uid = sessionStorage.getItem("pfhk_session_id");
+    if (!uid) {
+      router.replace("/onboard");
+      return;
+    }
+    setUserId(uid);
   }, [router]);
 
   if (!userId) {

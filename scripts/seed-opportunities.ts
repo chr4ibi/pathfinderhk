@@ -688,7 +688,7 @@ const OPPORTUNITIES = [
     title: "Supply Chain Graduate",
     org: "Maersk Hong Kong",
     type: "graduate_program",
-    industry: "logistics",
+    industry: "other",
     location: "hk_island",
     description:
       "Join Maersk's 2-year global graduate programme based in HK. Work across ocean freight, inland logistics, and digital supply chain solutions.",
@@ -699,7 +699,7 @@ const OPPORTUNITIES = [
     title: "Logistics Operations Intern",
     org: "DHL Hong Kong",
     type: "internship",
-    industry: "logistics",
+    industry: "other",
     location: "new_territories",
     description:
       "Support air and sea freight operations at DHL's HK hub. Work on shipment tracking, customs clearance, and warehouse management.",
@@ -710,7 +710,7 @@ const OPPORTUNITIES = [
     title: "Aviation Operations Graduate",
     org: "Airport Authority Hong Kong",
     type: "graduate_program",
-    industry: "logistics",
+    industry: "other",
     location: "new_territories",
     description:
       "Manage terminal operations and business development at HK International Airport, the world's busiest cargo hub.",
@@ -721,7 +721,7 @@ const OPPORTUNITIES = [
     title: "Port Operations Intern",
     org: "Hutchison Ports",
     type: "internship",
-    industry: "logistics",
+    industry: "other",
     location: "new_territories",
     description:
       "Work at one of the world's leading port operators. Gain exposure to container terminal operations, digital port systems, and trade flows.",
@@ -732,7 +732,7 @@ const OPPORTUNITIES = [
     title: "Last-Mile Delivery Analyst",
     org: "SF Express Hong Kong",
     type: "internship",
-    industry: "logistics",
+    industry: "other",
     location: "kowloon",
     description:
       "Optimise last-mile delivery routes and operations for SF Express's HK network using data analytics and operational research methods.",
@@ -745,7 +745,7 @@ const OPPORTUNITIES = [
     title: "Property Valuation Intern",
     org: "JLL Hong Kong",
     type: "internship",
-    industry: "real_estate",
+    industry: "other",
     location: "hk_island",
     description:
       "Assist senior valuers in appraising commercial, residential, and industrial properties across HK. Use market data and DCF models.",
@@ -756,7 +756,7 @@ const OPPORTUNITIES = [
     title: "Real Estate Investment Analyst",
     org: "Link REIT",
     type: "graduate_program",
-    industry: "real_estate",
+    industry: "other",
     location: "hk_island",
     description:
       "Support asset management and deal analysis at Asia's largest REIT. Work on property acquisition, disposal, and portfolio optimisation.",
@@ -767,7 +767,7 @@ const OPPORTUNITIES = [
     title: "Leasing Executive Graduate",
     org: "Sun Hung Kai Properties",
     type: "graduate_program",
-    industry: "real_estate",
+    industry: "other",
     location: "hk_island",
     description:
       "Manage commercial and residential leasing for one of HK's largest developers. Negotiate leases, conduct market research, and manage tenant relationships.",
@@ -778,7 +778,7 @@ const OPPORTUNITIES = [
     title: "PropTech Product Intern",
     org: "Spacious.hk",
     type: "internship",
-    industry: "real_estate",
+    industry: "other",
     location: "hk_island",
     description:
       "Improve the product experience for HK's leading property listing platform. Work on search UX, data quality, and agent tools.",
@@ -791,7 +791,7 @@ const OPPORTUNITIES = [
     title: "Paralegal Intern",
     org: "Linklaters Hong Kong",
     type: "internship",
-    industry: "legal",
+    industry: "other",
     location: "hk_island",
     description:
       "Support Magic Circle lawyers on M&A, capital markets, and litigation matters. Research, document review, and drafting support.",
@@ -802,7 +802,7 @@ const OPPORTUNITIES = [
     title: "Legal Research Graduate",
     org: "Hong Kong Law Society",
     type: "graduate_program",
-    industry: "legal",
+    industry: "other",
     location: "hk_island",
     description:
       "Conduct legal research and policy analysis for HK's professional legal regulatory body. Produce consultation papers and reform recommendations.",
@@ -813,7 +813,7 @@ const OPPORTUNITIES = [
     title: "Compliance Analyst Intern",
     org: "SFC Hong Kong",
     type: "internship",
-    industry: "legal",
+    industry: "other",
     location: "hk_island",
     description:
       "Support market surveillance and regulatory compliance work at HK's securities regulator. Analyse trading data and review disclosure filings.",
@@ -824,7 +824,7 @@ const OPPORTUNITIES = [
     title: "IP Legal Intern",
     org: "Bird & Bird Hong Kong",
     type: "internship",
-    industry: "legal",
+    industry: "other",
     location: "hk_island",
     description:
       "Assist on intellectual property, tech, and media law matters. Work on trademark filings, licensing agreements, and IP disputes.",
@@ -837,7 +837,7 @@ const OPPORTUNITIES = [
     title: "Hotel Management Trainee",
     org: "Four Seasons Hong Kong",
     type: "graduate_program",
-    industry: "hospitality",
+    industry: "other",
     location: "hk_island",
     description:
       "18-month structured programme at Hong Kong's iconic luxury hotel. Rotate across rooms, F&B, events, and front office operations.",
@@ -848,7 +848,7 @@ const OPPORTUNITIES = [
     title: "Tourism Research Intern",
     org: "Hong Kong Tourism Board",
     type: "internship",
-    industry: "hospitality",
+    industry: "other",
     location: "kowloon",
     description:
       "Support visitor research and market intelligence for HK's tourism promotion agency. Analyse visitor data and produce market strategy reports.",
@@ -859,7 +859,7 @@ const OPPORTUNITIES = [
     title: "Event Management Intern",
     org: "AsiaWorld-Expo",
     type: "internship",
-    industry: "hospitality",
+    industry: "other",
     location: "new_territories",
     description:
       "Support operations for large-scale conventions, concerts, and trade shows at HK's premier event venue. Manage vendors, logistics, and on-site execution.",
@@ -870,7 +870,7 @@ const OPPORTUNITIES = [
     title: "F&B Management Graduate",
     org: "Maxim's Group Hong Kong",
     type: "graduate_program",
-    industry: "hospitality",
+    industry: "other",
     location: "hk_island",
     description:
       "Lead restaurant operations across Maxim's 1,000+ outlets in HK. Rotational programme across fine dining, casual, and catering segments.",
@@ -918,7 +918,7 @@ const OPPORTUNITIES = [
     title: "Retail Management Trainee",
     org: "Dairy Farm Group",
     type: "graduate_program",
-    industry: "retail",
+    industry: "other",
     location: "hk_island",
     description:
       "Fast-track management programme across Dairy Farm's HK retail brands including Wellcome, Mannings, and IKEA. Gain P&L exposure in 18 months.",
@@ -929,7 +929,7 @@ const OPPORTUNITIES = [
     title: "E-commerce Operations Intern",
     org: "Zalora Hong Kong",
     type: "internship",
-    industry: "retail",
+    industry: "other",
     location: "hk_island",
     description:
       "Support inventory management, seller onboarding, and campaign execution for HK's leading fashion e-commerce platform.",
@@ -940,7 +940,7 @@ const OPPORTUNITIES = [
     title: "Brand Marketing Intern",
     org: "L'Oréal Hong Kong",
     type: "internship",
-    industry: "retail",
+    industry: "other",
     location: "hk_island",
     description:
       "Support beauty brand marketing campaigns for the HK market. Digital campaigns, influencer partnerships, and sales promotion planning.",
@@ -951,7 +951,7 @@ const OPPORTUNITIES = [
     title: "Category Management Graduate",
     org: "AS Watson Group",
     type: "graduate_program",
-    industry: "retail",
+    industry: "other",
     location: "kowloon",
     description:
       "Manage product assortment, pricing, and promotions for one of Asia's largest health and beauty retail groups. Work across Watsons and PARKnSHOP.",
@@ -1067,7 +1067,7 @@ const OPPORTUNITIES = [
     title: "Green Building Intern",
     org: "Swire Properties",
     type: "internship",
-    industry: "real_estate",
+    industry: "other",
     location: "hk_island",
     description:
       "Support sustainability and BEAM Plus green building certification projects for Swire's HK commercial portfolio including Pacific Place.",

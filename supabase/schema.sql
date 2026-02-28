@@ -8,7 +8,7 @@ create extension if not exists vector;
 
 create table if not exists profiles (
   id          uuid primary key default gen_random_uuid(),
-  user_id     uuid not null references auth.users(id) on delete cascade,
+  user_id     uuid not null,
   cv_data     jsonb not null default '{}',
   personality_traits jsonb not null default '{}',
   interests   jsonb not null default '{}',
@@ -41,7 +41,7 @@ create table if not exists opportunities (
 
 create table if not exists recommendations (
   id               uuid primary key default gen_random_uuid(),
-  user_id          uuid not null references auth.users(id) on delete cascade,
+  user_id          uuid not null,
   opportunity_id   uuid not null references opportunities(id) on delete cascade,
   fit_score        integer not null check (fit_score between 0 and 100),
   fit_explanation  text not null,
@@ -82,24 +82,10 @@ as $$
 $$;
 
 -- ─── Row Level Security ───────────────────────────────────────────────────────
+-- No auth — session IDs are ephemeral UUIDs, RLS disabled on user tables
 
-alter table profiles enable row level security;
-alter table recommendations enable row level security;
-
--- Profiles: users can only read/write their own
-create policy "Users manage own profile"
-  on profiles for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- Recommendations: users can only read their own
-create policy "Users read own recommendations"
-  on recommendations for select
-  using (auth.uid() = user_id);
-
-create policy "Service role manages recommendations"
-  on recommendations for all
-  using (auth.role() = 'service_role');
+alter table profiles disable row level security;
+alter table recommendations disable row level security;
 
 -- Opportunities: publicly readable
 alter table opportunities enable row level security;

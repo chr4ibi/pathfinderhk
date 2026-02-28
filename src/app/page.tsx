@@ -34,15 +34,6 @@ export default function LandingPage() {
               Discover Your Path →
             </Button>
           </Link>
-          <Link href="/dashboard">
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-slate-600 text-slate-300 hover:bg-slate-800 px-8 py-6 text-lg rounded-xl"
-            >
-              View Demo Dashboard
-            </Button>
-          </Link>
         </div>
 
         {/* Feature highlights */}

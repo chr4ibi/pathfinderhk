@@ -1,44 +1,90 @@
 "use client";
 
-// TODO (Phase 4 - Team Task): Implement the full Opportunities page
-// Features: Ranked list, filters (industry, type, location, paid/unpaid), expandable cards with fit scores
-// See PRD Section 4.3 and Task 4.3 in README.md
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase";
-import { OpportunityType, Industry, HKLocation } from "@/types";
+import { OpportunityType, Industry, HKLocation, Recommendation, Opportunity } from "@/types";
 
 const TYPES: OpportunityType[] = ["internship", "graduate_program", "fellowship", "volunteer", "full_time"];
 const INDUSTRIES: Industry[] = ["technology", "finance", "consulting", "social_impact", "government", "creative"];
 const LOCATIONS: HKLocation[] = ["hk_island", "kowloon", "new_territories", "remote", "hybrid"];
 
+type RecommendationWithOpp = Recommendation & { opportunity: Opportunity };
+
+function fitColor(score: number) {
+  if (score >= 80) return "bg-green-500/20 text-green-300 border-green-500/30";
+  if (score >= 60) return "bg-amber-500/20 text-amber-300 border-amber-500/30";
+  return "bg-red-500/20 text-red-300 border-red-500/30";
+}
+
 export default function OpportunitiesPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+  const [allRecs, setAllRecs] = useState<RecommendationWithOpp[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [matching, setMatching] = useState(false);
   const [selectedType, setSelectedType] = useState<OpportunityType | null>(null);
   const [selectedIndustry, setSelectedIndustry] = useState<Industry | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<HKLocation | null>(null);
   const [paidOnly, setPaidOnly] = useState(false);
 
   useEffect(() => {
-    createClient()
-      .auth.getSession()
-      .then(({ data }) => {
-        if (data.session?.user) {
-          setUserId(data.session.user.id);
-        } else {
-          router.replace("/auth");
-        }
-      });
+    const supabase = createClient();
+    const uid = sessionStorage.getItem("pfhk_session_id");
+    if (!uid) {
+      router.replace("/onboard");
+      return;
+    }
+    setUserId(uid);
+
+    (async () => {
+      let { data: recs } = await supabase
+        .from("recommendations")
+        .select("*, opportunity:opportunities(*)")
+        .eq("user_id", uid)
+        .order("fit_score", { ascending: false })
+        .limit(50);
+
+      if (!recs || recs.length === 0) {
+        setLoading(false);
+        setMatching(true);
+        const res = await fetch("/api/match", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: uid }),
+        });
+        const json = await res.json();
+        recs = json.recommendations ?? [];
+        setMatching(false);
+      }
+
+      setAllRecs((recs ?? []) as RecommendationWithOpp[]);
+      setLoading(false);
+    })();
   }, [router]);
 
-  if (!userId) {
+  const filtered = allRecs
+    .filter((r) => !selectedType || r.opportunity.type === selectedType)
+    .filter((r) => !selectedIndustry || r.opportunity.industry === selectedIndustry)
+    .filter((r) => !selectedLocation || r.opportunity.location === selectedLocation)
+    .filter((r) => !paidOnly || r.opportunity.is_paid)
+    .slice(0, 10);
+
+  if (loading || !userId) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (matching) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-400 text-sm">Finding your best matches…</p>
       </div>
     );
   }
@@ -122,20 +168,69 @@ export default function OpportunitiesPage() {
           </Button>
         </div>
 
-        {/* TODO: Load real recommendations from Supabase and render expandable OpportunityCard components */}
+        {/* Opportunity Cards */}
         <div className="space-y-4">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+          {filtered.length === 0 && (
+            <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800 text-center text-slate-500">
+              No opportunities match your filters.
+            </div>
+          )}
+          {filtered.map((rec) => (
             <div
-              key={i}
-              className="bg-slate-900 rounded-2xl p-6 border border-slate-800 flex items-center justify-between"
+              key={rec.id}
+              className="bg-slate-900 rounded-2xl p-6 border border-slate-800"
             >
-              <div>
-                <p className="text-slate-500 text-sm">Opportunity {i} placeholder</p>
-                <p className="text-slate-600 text-xs mt-1">Organisation · Type · Location</p>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-white text-lg">{rec.opportunity.title}</h3>
+                    <Badge className={`text-xs border ${fitColor(rec.fit_score)}`}>
+                      {rec.fit_score}% fit
+                    </Badge>
+                    {rec.opportunity.is_paid && (
+                      <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
+                        Paid
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-slate-400 text-sm mt-0.5">{rec.opportunity.org}</p>
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    <Badge className="bg-slate-800 text-slate-300 text-xs capitalize">
+                      {rec.opportunity.type.replace("_", " ")}
+                    </Badge>
+                    <Badge className="bg-slate-800 text-slate-300 text-xs capitalize">
+                      {rec.opportunity.industry.replace("_", " ")}
+                    </Badge>
+                    <Badge className="bg-slate-800 text-slate-300 text-xs capitalize">
+                      {rec.opportunity.location.replace("_", " ")}
+                    </Badge>
+                  </div>
+                  <p className="text-slate-400 text-sm mt-3">{rec.fit_explanation}</p>
+                  {rec.gaps && (
+                    <p className="text-slate-500 text-xs mt-2">Gaps: {rec.gaps}</p>
+                  )}
+                  {rec.actions && rec.actions.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {rec.actions.map((action, i) => (
+                        <li key={i} className="text-blue-400 text-xs flex items-start gap-1.5">
+                          <span className="shrink-0 mt-0.5">→</span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {rec.opportunity.url && (
+                  <a
+                    href={rec.opportunity.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-sm bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg px-3 py-1.5 hover:bg-blue-500/30 transition-colors"
+                  >
+                    Apply
+                  </a>
+                )}
               </div>
-              <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
-                {90 - i * 5}% fit
-              </Badge>
             </div>
           ))}
         </div>

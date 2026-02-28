@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       (matches as { id: string; title: string; org: string; description: string; requirements: string[] }[]).slice(0, 10).map(async (opp) => {
         const profileSummary = `
 CV: ${JSON.stringify(profile.cv_data)}
-Personality: ${JSON.stringify(profile.personality_traits)}
+Profile: ${JSON.stringify(profile.rich_profile)}
 Interests: ${JSON.stringify(profile.interests)}
         `.trim();
 

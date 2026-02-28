@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("cv_data, personality_traits, interests, insights")
+    .select("cv_data, rich_profile, interests, insights")
     .eq("user_id", userId)
     .single();
 

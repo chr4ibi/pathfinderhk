@@ -1,5 +1,3 @@
-export * from "./profile";
-
 export type PersonalityAnswers = Record<string, string>;
 
 // ─── User & Auth ────────────────────────────────────────────────────────────
@@ -40,13 +38,11 @@ export interface CVData {
   certifications: string[];
 }
 
-export interface PersonalityTraits {
-  collaborative_vs_independent: number; // -100 to 100
-  risk_tolerant_vs_cautious: number;
-  creative_vs_analytical: number;
-  detail_oriented_vs_big_picture: number;
-  leadership_potential: number;
-  social_impact_driven: number;
+export interface UserProfile {
+  summary: string;           // 2-3 sentence narrative
+  top_skills: string[];      // 6-8 skills from CV + personality
+  career_domains: string[];  // e.g. ["technology", "consulting"]
+  work_style: string;        // 1-sentence preferred work style
 }
 
 export interface Interests {
@@ -82,7 +78,7 @@ export interface Profile {
   id: string;
   user_id: string;
   cv_data: CVData;
-  personality_traits: PersonalityTraits;
+  rich_profile: UserProfile | null;
   interests: Interests;
   insights: ProfileInsights | null;
   embedding?: number[];
