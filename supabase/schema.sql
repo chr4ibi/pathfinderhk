@@ -13,7 +13,7 @@ create table if not exists profiles (
   personality_traits jsonb not null default '{}',
   interests   jsonb not null default '{}',
   insights    jsonb,
-  embedding   vector(768),
+  embedding   vector(1536),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
   unique (user_id)
@@ -33,7 +33,7 @@ create table if not exists opportunities (
   is_paid      boolean not null default true,
   url          text,
   deadline     date,
-  embedding    vector(768),
+  embedding    vector(1536),
   created_at   timestamptz not null default now()
 );
 
@@ -54,7 +54,7 @@ create table if not exists recommendations (
 -- ─── pgvector similarity search function ─────────────────────────────────────
 
 create or replace function match_opportunities(
-  query_embedding vector(768),
+  query_embedding vector(1536),
   match_count     int default 20
 )
 returns table (

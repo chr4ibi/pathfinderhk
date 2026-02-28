@@ -1,20 +1,20 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
-export const geminiFlash = google("gemini-1.5-flash");
+export const geminiFlash = openai("gpt-4o-mini");
 
-interface GeminiMessage {
+interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
 
 /** Non-streaming text generation. Strips markdown fences from the response. */
 export async function geminiChat(
-  messages: GeminiMessage[],
+  messages: ChatMessage[],
   options: { temperature?: number; maxTokens?: number } = {}
 ): Promise<string> {
   const systemMsg = messages.find((m) => m.role === "system");
@@ -30,6 +30,6 @@ export async function geminiChat(
     maxOutputTokens: options.maxTokens ?? 2048,
   });
 
-  // Strip markdown code fences Gemini occasionally adds
+  // Strip markdown code fences the model occasionally adds
   return text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 }
