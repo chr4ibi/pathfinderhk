@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { minimaxChat } from "@/lib/minimax";
+import { geminiChat } from "@/lib/gemini";
 import { createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/supabase-server";
 
 export async function POST(req: NextRequest) {
@@ -37,7 +37,7 @@ Personality: ${JSON.stringify(profile.personality_traits)}
 Interests: ${JSON.stringify(profile.interests)}
         `.trim();
 
-        const text = await minimaxChat([
+        const text = await geminiChat([
           {
             role: "user",
             content: `Given this user profile:

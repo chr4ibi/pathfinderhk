@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { minimaxChat } from "@/lib/minimax";
+import { geminiChat } from "@/lib/gemini";
 import { PersonalityTraits } from "@/types";
 
 export async function POST(req: NextRequest) {
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       .map(([qId, answer]) => `${qId}: ${answer}`)
       .join("\n");
 
-    const content = await minimaxChat([
+    const content = await geminiChat([
       {
         role: "system",
         content: `You are a personality analyst. Analyse the following questionnaire answers and extract personality dimensions.

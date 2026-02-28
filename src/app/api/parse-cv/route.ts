@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { minimaxChat } from "@/lib/minimax";
+import { geminiChat } from "@/lib/gemini";
 import { CVData } from "@/types";
 
 async function extractText(file: File): Promise<string> {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     const text = await extractText(file);
 
-    const response = await minimaxChat([
+    const response = await geminiChat([
       {
         role: "system",
         content: CV_PARSE_PROMPT,
@@ -59,10 +59,13 @@ export async function POST(req: NextRequest) {
       },
     ]);
 
-    const cvData: CVData = JSON.parse(response);
+    // Strip markdown code fences MiniMax sometimes adds
+    const cleaned = response.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+    const cvData: CVData = JSON.parse(cleaned);
     return NextResponse.json(cvData);
   } catch (err) {
-    console.error("CV parse error:", err);
-    return NextResponse.json({ error: "Failed to parse CV" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("CV parse error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

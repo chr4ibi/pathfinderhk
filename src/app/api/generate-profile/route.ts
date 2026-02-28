@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { minimaxChat } from "@/lib/minimax";
+import { geminiChat } from "@/lib/gemini";
 import { generateEmbedding } from "@/lib/ai";
 import { createServiceSupabaseClient } from "@/lib/supabase-server";
 import { buildUserInput, PROFILE_EXTRACTION_SYSTEM_PROMPT } from "@/lib/profile-extraction-prompt";
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     const userInput = buildUserInput(cvData, answers);
 
-    const text = await minimaxChat([
+    const text = await geminiChat([
       { role: "system", content: PROFILE_EXTRACTION_SYSTEM_PROMPT },
       { role: "user", content: userInput },
     ]);

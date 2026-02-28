@@ -11,6 +11,8 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { embed } from "ai";
 import * as dotenv from "dotenv";
 import * as path from "path";
 
@@ -22,34 +24,16 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function embed(text: string): Promise<number[]> {
-  const res = await fetch(
-    `https://api.minimax.chat/v1/embeddings?GroupId=${process.env.MINIMAX_GROUP_ID}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.MINIMAX_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "embo-01",
-        input: [text],
-        type: "db",
-      }),
-    }
-  );
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+});
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`MiniMax embeddings error: ${err}`);
-  }
-
-  const data = await res.json();
-
-  if (Array.isArray(data.vectors?.[0])) return data.vectors[0];
-  if (Array.isArray(data.data?.[0]?.embedding)) return data.data[0].embedding;
-
-  throw new Error(`MiniMax embeddings: unexpected response: ${JSON.stringify(data)}`);
+async function embedText(text: string): Promise<number[]> {
+  const { embedding } = await embed({
+    model: google.textEmbeddingModel("text-embedding-004"),
+    value: text,
+  });
+  return embedding;
 }
 
 // ─── Opportunity Dataset ──────────────────────────────────────────────────────
@@ -1134,7 +1118,7 @@ async function main() {
     const textForEmbedding = `${opp.title} at ${opp.org}. ${opp.description} Requirements: ${opp.requirements.join(", ")}`;
 
     console.log(`  Embedding: ${opp.title}`);
-    const embedding = await embed(textForEmbedding);
+    const embedding = await embedText(textForEmbedding);
 
     const { error } = await supabase.from("opportunities").upsert({
       ...opp,

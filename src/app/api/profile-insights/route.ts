@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { minimaxChat } from "@/lib/minimax";
+import { geminiChat } from "@/lib/gemini";
 import { createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/supabase-server";
 import { ProfileInsights } from "@/types";
 
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    const text = await minimaxChat([
+    const text = await geminiChat([
       {
         role: "user",
         content: `Based on this user profile:
