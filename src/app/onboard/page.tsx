@@ -8,7 +8,7 @@ import { CVUpload } from "@/components/onboarding/CVUpload";
 import { PersonalityQuestions } from "@/components/onboarding/PersonalityQuestions";
 import { InterestsForm } from "@/components/onboarding/InterestsForm";
 import { createClient } from "@/lib/supabase";
-import { CVData, PersonalityTraits, OnboardingStep } from "@/types";
+import { CVData, OnboardingStep, PersonalityAnswers } from "@/types";
 
 const STEPS: OnboardingStep[] = ["cv", "personality", "interests", "processing"];
 const STEP_LABELS = ["Upload CV", "Quick Questions", "Interests", "Generating Profile"];
@@ -25,7 +25,7 @@ export default function OnboardPage() {
   const router = useRouter();
   const [step, setStep] = useState<OnboardingStep>("cv");
   const [cvData, setCvData] = useState<CVData | null>(null);
-  const [personalityTraits, setPersonalityTraits] = useState<PersonalityTraits | null>(null);
+  const [personalityAnswers, setPersonalityAnswers] = useState<PersonalityAnswers | null>(null);
   const [userId, setUserId] = useState<string>("");
   const [processingMsgIndex, setProcessingMsgIndex] = useState(0);
 
@@ -102,15 +102,15 @@ export default function OnboardPage() {
               transition={{ duration: 0.25 }}
             >
               <PersonalityQuestions
-                onComplete={(traits) => {
-                  setPersonalityTraits(traits);
+                onComplete={(answers) => {
+                  setPersonalityAnswers(answers);
                   setStep("interests");
                 }}
               />
             </motion.div>
           )}
 
-          {step === "interests" && cvData && personalityTraits && (
+          {step === "interests" && cvData && personalityAnswers && (
             <motion.div
               key="interests"
               initial={{ opacity: 0, x: 40 }}
@@ -120,7 +120,7 @@ export default function OnboardPage() {
             >
               <InterestsForm
                 cvData={cvData}
-                personalityTraits={personalityTraits}
+                answers={personalityAnswers}
                 userId={userId}
                 onComplete={() => setStep("processing")}
               />

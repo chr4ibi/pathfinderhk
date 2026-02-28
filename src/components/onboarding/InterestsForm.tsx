@@ -3,21 +3,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CVData, PersonalityTraits, Interests } from "@/types";
+import { CVData, Interests, PersonalityAnswers } from "@/types";
 
 interface InterestsFormProps {
   cvData: CVData;
-  personalityTraits: PersonalityTraits;
+  answers: PersonalityAnswers;
   userId: string;
   onComplete: () => void;
 }
 
-export function InterestsForm({
-  cvData,
-  personalityTraits,
-  userId,
-  onComplete,
-}: InterestsFormProps) {
+export function InterestsForm({ cvData, answers, userId, onComplete }: InterestsFormProps) {
   const [interests, setInterests] = useState<Interests>({
     favourite_book: "",
     favourite_movie: "",
@@ -36,7 +31,7 @@ export function InterestsForm({
         body: JSON.stringify({
           userId,
           cvData,
-          personalityTraits,
+          answers,
           interests: interestsToSubmit,
         }),
       });

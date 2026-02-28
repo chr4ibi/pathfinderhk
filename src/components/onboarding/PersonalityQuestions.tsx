@@ -4,18 +4,16 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { PERSONALITY_QUESTIONS } from "@/lib/personality-questions";
-import { PersonalityTraits } from "@/types";
+import { PersonalityAnswers } from "@/types";
 
 interface PersonalityQuestionsProps {
-  onComplete: (traits: PersonalityTraits) => void;
+  onComplete: (answers: PersonalityAnswers) => void;
 }
 
 export function PersonalityQuestions({ onComplete }: PersonalityQuestionsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<PersonalityAnswers>({});
   const [direction, setDirection] = useState<1 | -1>(1);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string>("");
 
   const question = PERSONALITY_QUESTIONS[currentIndex];
   const isLast = currentIndex === PERSONALITY_QUESTIONS.length - 1;
@@ -25,31 +23,14 @@ export function PersonalityQuestions({ onComplete }: PersonalityQuestionsProps) 
     setAnswers((prev) => ({ ...prev, [question.id]: value }));
   };
 
-  const goNext = async () => {
+  const goNext = () => {
     if (!selectedAnswer) return;
-
     if (!isLast) {
       setDirection(1);
       setCurrentIndex((i) => i + 1);
       return;
     }
-
-    // Submit all answers
-    setSubmitting(true);
-    setError("");
-    try {
-      const res = await fetch("/api/analyze-personality", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
-      });
-      if (!res.ok) throw new Error("Failed to analyse personality");
-      const traits: PersonalityTraits = await res.json();
-      onComplete(traits);
-    } catch {
-      setError("Something went wrong. Please try again.");
-      setSubmitting(false);
-    }
+    onComplete(answers);
   };
 
   const goBack = () => {
@@ -131,34 +112,21 @@ export function PersonalityQuestions({ onComplete }: PersonalityQuestionsProps) 
         </AnimatePresence>
       </div>
 
-      {error && (
-        <p className="text-red-400 text-sm text-center">{error}</p>
-      )}
-
       <div className="flex gap-3">
         <Button
           variant="outline"
           onClick={goBack}
-          disabled={currentIndex === 0 || submitting}
+          disabled={currentIndex === 0}
           className="flex-1"
         >
           Back
         </Button>
         <Button
           onClick={goNext}
-          disabled={!selectedAnswer || submitting}
+          disabled={!selectedAnswer}
           className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:opacity-40"
         >
-          {submitting ? (
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Analysing...
-            </span>
-          ) : isLast ? (
-            "Finish →"
-          ) : (
-            "Next →"
-          )}
+          {isLast ? "Finish →" : "Next →"}
         </Button>
       </div>
     </div>
