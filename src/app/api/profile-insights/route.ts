@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
-import { claudeSonnet } from "@/lib/bedrock";
+import { claudeSonnet } from "@/lib/ai";
 import { createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/supabase-server";
 import { ProfileInsights } from "@/types";
 

@@ -1,5 +1,5 @@
-import { streamText, tool } from "ai";
-import { claudeSonnet } from "@/lib/bedrock";
+import { streamText, tool, convertToModelMessages } from "ai";
+import { claudeSonnet } from "@/lib/ai";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { z } from "zod";
 
@@ -43,7 +43,7 @@ Always personalise your responses to the user's actual profile and interests abo
   const result = streamText({
     model: claudeSonnet,
     system: systemPrompt,
-    messages,
+    messages: await convertToModelMessages(messages),
     tools: {
       searchOpportunities: tool({
         description: "Search for Hong Kong opportunities matching specific criteria",
@@ -97,5 +97,5 @@ Always personalise your responses to the user's actual profile and interests abo
     },
   });
 
-  return result.toTextStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
