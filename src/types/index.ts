@@ -1,3 +1,7 @@
+export * from "./profile";
+
+export type PersonalityAnswers = Record<string, string>;
+
 // ─── User & Auth ────────────────────────────────────────────────────────────
 
 export interface User {

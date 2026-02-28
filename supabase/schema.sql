@@ -122,3 +122,7 @@ create index if not exists idx_opportunities_industry on opportunities(industry)
 create index if not exists idx_opportunities_embedding
   on opportunities using ivfflat (embedding vector_cosine_ops)
   with (lists = 100);
+
+-- ─── Rich Profile Column ──────────────────────────────────────────────────────
+
+alter table profiles add column if not exists rich_profile jsonb;

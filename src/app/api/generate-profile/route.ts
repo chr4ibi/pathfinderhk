@@ -1,37 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateEmbedding } from "@/lib/bedrock";
+import { generateText } from "ai";
+import { claudeSonnet, generateEmbedding } from "@/lib/bedrock";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { CVData, PersonalityTraits, Interests } from "@/types";
+import { buildUserInput, PROFILE_EXTRACTION_SYSTEM_PROMPT } from "@/lib/profile-extraction-prompt";
+import { CVData, Interests, PersonalityAnswers, RichUserProfile } from "@/types";
+
+function buildSummaryForEmbedding(cvData: CVData, richProfile: RichUserProfile): string {
+  const { Psychometrics_BigFive: bf, Vocational_Interests_and_Values: viv, Domain_Skills_Languages: langs } = richProfile;
+
+  // Top RIASEC dimensions
+  const riasec = [
+    ["Realistic", viv.riasec_realistic],
+    ["Investigative", viv.riasec_investigative],
+    ["Artistic", viv.riasec_artistic],
+    ["Social", viv.riasec_social],
+    ["Enterprising", viv.riasec_enterprising],
+    ["Conventional", viv.riasec_conventional],
+  ]
+    .sort((a, b) => (b[1] as number) - (a[1] as number))
+    .slice(0, 3)
+    .map(([label]) => label)
+    .join(", ");
+
+  // Top languages (score > 0)
+  const spokenLangs = Object.entries(langs)
+    .filter(([, score]) => (score as number) > 0)
+    .sort(([, a], [, b]) => (b as number) - (a as number))
+    .slice(0, 5)
+    .map(([key]) => key.replace("lang_", ""))
+    .join(", ");
+
+  const education = cvData.education
+    .map((e) => `${e.degree} in ${e.field} at ${e.institution}`)
+    .join("; ");
+
+  return `
+Name: ${cvData.name}
+Education: ${education || "N/A"}
+Skills: ${cvData.skills.slice(0, 20).join(", ")}
+Experience: ${cvData.experience.map((e) => `${e.title} at ${e.company}`).join("; ")}
+Languages: ${spokenLangs || "N/A"}
+Big Five: O=${bf.openness_overall} C=${bf.conscientiousness_overall} E=${bf.extraversion_overall} A=${bf.agreeableness_overall} N=${bf.neuroticism_overall}
+Top RIASEC: ${riasec}
+Certifications: ${cvData.certifications.slice(0, 10).join(", ")}
+  `.trim();
+}
 
 export async function POST(req: NextRequest) {
   try {
     const {
       userId,
       cvData,
-      personalityTraits,
+      answers,
       interests,
     }: {
       userId: string;
       cvData: CVData;
-      personalityTraits: PersonalityTraits;
+      answers: PersonalityAnswers;
       interests: Interests;
     } = await req.json();
 
-    // Build a rich text representation for embedding
-    const profileText = `
-Name: ${cvData.name}
-Education: ${cvData.education.map((e) => `${e.degree} in ${e.field} at ${e.institution}`).join(", ")}
-Skills: ${cvData.skills.join(", ")}
-Experience: ${cvData.experience.map((e) => `${e.title} at ${e.company}: ${e.description}`).join(" | ")}
-Languages: ${cvData.languages.join(", ")}
-Certifications: ${cvData.certifications.join(", ")}
-Personality: collaborative=${personalityTraits.collaborative_vs_independent}, risk=${personalityTraits.risk_tolerant_vs_cautious}, creative=${personalityTraits.creative_vs_analytical}
-Social impact driven: ${personalityTraits.social_impact_driven}
-Interests: book=${interests.favourite_book ?? "N/A"}, movie=${interests.favourite_movie ?? "N/A"}, other=${interests.other ?? "N/A"}
-    `.trim();
+    // Phase 1–3: Extract rich profile via Bedrock Claude
+    const userInput = buildUserInput(cvData, answers);
 
-    const embedding = await generateEmbedding(profileText);
+    const { text } = await generateText({
+      model: claudeSonnet,
+      system: PROFILE_EXTRACTION_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userInput }],
+    });
 
+    const richProfile: RichUserProfile = JSON.parse(text);
+
+    // Generate embedding from summary text
+    const summaryText = buildSummaryForEmbedding(cvData, richProfile);
+    const embedding = await generateEmbedding(summaryText);
+
+    // Upsert to Supabase
     const supabase = await createServerSupabaseClient();
 
     const { data, error } = await supabase
@@ -39,7 +83,7 @@ Interests: book=${interests.favourite_book ?? "N/A"}, movie=${interests.favourit
       .upsert({
         user_id: userId,
         cv_data: cvData,
-        personality_traits: personalityTraits,
+        rich_profile: richProfile,
         interests,
         embedding,
         updated_at: new Date().toISOString(),
