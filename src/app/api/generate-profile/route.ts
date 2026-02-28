@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateEmbedding } from "@/lib/bedrock";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createServiceSupabaseClient } from "@/lib/supabase-server";
 import { CVData, PersonalityTraits, Interests } from "@/types";
 
 export async function POST(req: NextRequest) {
@@ -32,7 +32,7 @@ Interests: book=${interests.favourite_book ?? "N/A"}, movie=${interests.favourit
 
     const embedding = await generateEmbedding(profileText);
 
-    const supabase = await createServerSupabaseClient();
+    const supabase = createServiceSupabaseClient();
 
     const { data, error } = await supabase
       .from("profiles")
