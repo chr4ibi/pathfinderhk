@@ -1,12 +1,11 @@
 "use client";
 
-// TODO (Phase 5 - Team Task): Implement the full AI Career Advisor Chatbot
-// Use Vercel AI SDK's useChat hook with streaming
-// See PRD Section 4.4 and Task 5.1-5.2 in README.md
-
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase";
 
 const STARTER_QUESTIONS = [
   "What are my strongest career paths?",
@@ -15,12 +14,10 @@ const STARTER_QUESTIONS = [
   "Why wasn't I matched with government roles?",
 ];
 
-export default function ChatPage() {
-  // TODO: Replace "demo-user-id" with actual authenticated user ID
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = (useChat as any)({
+function ChatUI({ userId }: { userId: string }) {
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setInput } = useChat({
     api: "/api/chat",
-    body: { userId: "demo-user-id" },
+    body: { userId },
   });
 
   return (
@@ -44,7 +41,7 @@ export default function ChatPage() {
               {STARTER_QUESTIONS.map((q) => (
                 <button
                   key={q}
-                  // TODO: Wire up handleInputChange to set value and auto-submit
+                  onClick={() => setInput(q)}
                   className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 transition-colors"
                 >
                   {q}
@@ -54,8 +51,7 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {messages.map((m: any) => (
+        {messages.map((m) => (
           <div
             key={m.id}
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
@@ -101,4 +97,31 @@ export default function ChatPage() {
       </div>
     </div>
   );
+}
+
+export default function ChatPage() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    createClient()
+      .auth.getSession()
+      .then(({ data }) => {
+        if (data.session?.user) {
+          setUserId(data.session.user.id);
+        } else {
+          router.replace("/auth");
+        }
+      });
+  }, [router]);
+
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return <ChatUI userId={userId} />;
 }

@@ -27,21 +27,30 @@ export default function AuthPage() {
     const supabase = createClient();
 
     if (mode === "signup") {
-      const { error: signUpError } = await supabase.auth.signUp({ email, password });
+      const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
       if (signUpError) {
         setError(signUpError.message);
+      } else if (data.session) {
+        // Email confirmation disabled — immediately signed in, go to onboarding
+        router.push("/onboard");
       } else {
         setSuccessMsg("Account created! Check your email to confirm, then sign in.");
       }
     } else {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (signInError) {
         setError(signInError.message);
       } else {
-        router.push("/dashboard");
+        // Check if user has already completed onboarding
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("user_id", data.user.id)
+          .single();
+        router.push(profile ? "/dashboard" : "/onboard");
       }
     }
 
