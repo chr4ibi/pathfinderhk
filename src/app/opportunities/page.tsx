@@ -4,9 +4,11 @@
 // Features: Ranked list, filters (industry, type, location, paid/unpaid), expandable cards with fit scores
 // See PRD Section 4.3 and Task 4.3 in README.md
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase";
 import { OpportunityType, Industry, HKLocation } from "@/types";
 
 const TYPES: OpportunityType[] = ["internship", "graduate_program", "fellowship", "volunteer", "full_time"];
@@ -14,10 +16,32 @@ const INDUSTRIES: Industry[] = ["technology", "finance", "consulting", "social_i
 const LOCATIONS: HKLocation[] = ["hk_island", "kowloon", "new_territories", "remote", "hybrid"];
 
 export default function OpportunitiesPage() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<OpportunityType | null>(null);
   const [selectedIndustry, setSelectedIndustry] = useState<Industry | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<HKLocation | null>(null);
   const [paidOnly, setPaidOnly] = useState(false);
+
+  useEffect(() => {
+    createClient()
+      .auth.getSession()
+      .then(({ data }) => {
+        if (data.session?.user) {
+          setUserId(data.session.user.id);
+        } else {
+          router.replace("/auth");
+        }
+      });
+  }, [router]);
+
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-8">

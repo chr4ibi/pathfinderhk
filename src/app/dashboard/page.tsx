@@ -4,7 +4,43 @@
 // Components needed: SkillRadarChart, StrengthCards, CareerClusterHeatmap, OpportunityCards, AudioBriefingButton
 // See PRD Section 4.2, 7.2, and Task 4.1-4.4 in README.md
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
+
 export default function DashboardPage() {
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(async ({ data }) => {
+      const user = data.session?.user;
+      if (!user) {
+        router.replace("/auth");
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .single();
+      if (!profile) {
+        router.replace("/onboard");
+        return;
+      }
+      setReady(true);
+    });
+  }, [router]);
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-white p-8">
       <div className="max-w-7xl mx-auto space-y-8">
