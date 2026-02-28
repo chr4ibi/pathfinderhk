@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
-import { claudeSonnet, generateEmbedding } from "@/lib/bedrock";
+import { claudeSonnet, generateEmbedding } from "@/lib/ai";
 import { createServiceSupabaseClient } from "@/lib/supabase-server";
 import { buildUserInput, PROFILE_EXTRACTION_SYSTEM_PROMPT } from "@/lib/profile-extraction-prompt";
 import { CVData, Interests, PersonalityAnswers, RichUserProfile } from "@/types";

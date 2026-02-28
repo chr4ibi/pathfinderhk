@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase";
@@ -15,10 +16,18 @@ const STARTER_QUESTIONS = [
 ];
 
 function ChatUI({ userId }: { userId: string }) {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setInput } = useChat({
-    api: "/api/chat",
-    body: { userId },
+  const [input, setInput] = useState("");
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: "/api/chat", body: { userId } }),
   });
+  const isLoading = status === "streaming" || status === "submitted";
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    sendMessage({ text: input });
+    setInput("");
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col">
@@ -51,22 +60,25 @@ function ChatUI({ userId }: { userId: string }) {
           </div>
         )}
 
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+        {messages.map((m) => {
+          const text = m.parts.find((p) => p.type === "text")?.text ?? "";
+          return (
             <div
-              className={`max-w-2xl rounded-2xl px-5 py-3 text-sm leading-relaxed ${
-                m.role === "user"
-                  ? "bg-blue-500 text-white"
-                  : "bg-slate-900 border border-slate-800 text-slate-200"
-              }`}
+              key={m.id}
+              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              {m.content}
+              <div
+                className={`max-w-2xl rounded-2xl px-5 py-3 text-sm leading-relaxed ${
+                  m.role === "user"
+                    ? "bg-blue-500 text-white"
+                    : "bg-slate-900 border border-slate-800 text-slate-200"
+                }`}
+              >
+                {text}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isLoading && (
           <div className="flex justify-start">
@@ -82,7 +94,7 @@ function ChatUI({ userId }: { userId: string }) {
         <form onSubmit={handleSubmit} className="flex gap-3">
           <Input
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about your career path..."
             className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 flex-1"
           />

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText, FilePart } from "ai";
-import { claudeSonnet } from "@/lib/bedrock";
+import { claudeSonnet } from "@/lib/ai";
 import { CVData } from "@/types";
 
 export async function POST(req: NextRequest) {
