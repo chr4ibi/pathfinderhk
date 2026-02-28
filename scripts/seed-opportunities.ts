@@ -11,10 +11,6 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import {
-  BedrockRuntimeClient,
-  InvokeModelCommand,
-} from "@aws-sdk/client-bedrock-runtime";
 import * as dotenv from "dotenv";
 import * as path from "path";
 
@@ -26,37 +22,34 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Titan Embed v1 is only available in us-east-1 / us-west-2, not ap-east-1
-const bedrockClient = new BedrockRuntimeClient({
-  region: "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
-
-async function embed(text: string, attempt = 1): Promise<number[]> {
-  try {
-    const res = await bedrockClient.send(
-      new InvokeModelCommand({
-        modelId: "amazon.titan-embed-text-v1",
-        contentType: "application/json",
-        accept: "application/json",
-        body: JSON.stringify({ inputText: text }),
-      })
-    );
-    const parsed = JSON.parse(Buffer.from(res.body).toString());
-    return parsed.embedding as number[];
-  } catch (err: unknown) {
-    const name = (err as { name?: string }).name ?? "";
-    if ((name === "ThrottlingException" || name === "ServiceUnavailableException") && attempt <= 6) {
-      const delay = Math.min(2000 * Math.pow(2, attempt - 1), 60000);
-      console.log(`    ⏳ Throttled — retrying in ${delay / 1000}s (attempt ${attempt}/6)`);
-      await new Promise((r) => setTimeout(r, delay));
-      return embed(text, attempt + 1);
+async function embed(text: string): Promise<number[]> {
+  const res = await fetch(
+    `https://api.minimax.chat/v1/embeddings?GroupId=${process.env.MINIMAX_GROUP_ID}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.MINIMAX_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "embo-01",
+        input: [text],
+        type: "db",
+      }),
     }
-    throw err;
+  );
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`MiniMax embeddings error: ${err}`);
   }
+
+  const data = await res.json();
+
+  if (Array.isArray(data.vectors?.[0])) return data.vectors[0];
+  if (Array.isArray(data.data?.[0]?.embedding)) return data.data[0].embedding;
+
+  throw new Error(`MiniMax embeddings: unexpected response: ${JSON.stringify(data)}`);
 }
 
 // ─── Opportunity Dataset ──────────────────────────────────────────────────────

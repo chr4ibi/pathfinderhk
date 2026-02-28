@@ -1,7 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText, FilePart } from "ai";
-import { claudeSonnet } from "@/lib/ai";
+import { minimaxChat } from "@/lib/minimax";
 import { CVData } from "@/types";
+
+async function extractText(file: File): Promise<string> {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+
+  if (file.type === "application/pdf") {
+    // Dynamic import avoids Next.js fs-related bundling issues with pdf-parse
+    const pdfParse = (await import("pdf-parse")).default;
+    const result = await pdfParse(buffer);
+    return result.text;
+  }
+
+  if (
+    file.type ===
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ) {
+    const mammoth = await import("mammoth");
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value;
+  }
+
+  throw new Error(`Unsupported file type: ${file.type}`);
+}
+
+const CV_PARSE_PROMPT = `Extract structured data from the CV text below and return ONLY valid JSON matching this schema:
+{
+  "name": string,
+  "email": string | null,
+  "education": [{ "institution": string, "degree": string, "field": string, "start_year": number, "end_year": number | null, "gpa": string | null }],
+  "skills": string[],
+  "experience": [{ "company": string, "title": string, "start_date": string, "end_date": string | null, "description": string }],
+  "languages": string[],
+  "certifications": string[]
+}
+Return only JSON, no markdown, no explanation.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,41 +46,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const base64 = Buffer.from(bytes).toString("base64");
-    const mediaType = file.type as "application/pdf" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const text = await extractText(file);
 
-    const { text } = await generateText({
-      model: claudeSonnet,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "file",
-              data: base64,
-              mediaType,
-            } satisfies FilePart,
-            {
-              type: "text",
-              text: `Extract structured data from this CV and return ONLY valid JSON matching this schema:
-{
-  "name": string,
-  "email": string | null,
-  "education": [{ "institution": string, "degree": string, "field": string, "start_year": number, "end_year": number | null, "gpa": string | null }],
-  "skills": string[],
-  "experience": [{ "company": string, "title": string, "start_date": string, "end_date": string | null, "description": string }],
-  "languages": string[],
-  "certifications": string[]
-}
-Return only JSON, no markdown, no explanation.`,
-            },
-          ],
-        },
-      ],
-    });
+    const response = await minimaxChat([
+      {
+        role: "system",
+        content: CV_PARSE_PROMPT,
+      },
+      {
+        role: "user",
+        content: text,
+      },
+    ]);
 
-    const cvData: CVData = JSON.parse(text);
+    const cvData: CVData = JSON.parse(response);
     return NextResponse.json(cvData);
   } catch (err) {
     console.error("CV parse error:", err);

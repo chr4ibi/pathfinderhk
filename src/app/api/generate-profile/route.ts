@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText } from "ai";
-import { claudeSonnet, generateEmbedding } from "@/lib/ai";
+import { minimaxChat } from "@/lib/minimax";
+import { generateEmbedding } from "@/lib/ai";
 import { createServiceSupabaseClient } from "@/lib/supabase-server";
 import { buildUserInput, PROFILE_EXTRACTION_SYSTEM_PROMPT } from "@/lib/profile-extraction-prompt";
 import { CVData, Interests, PersonalityAnswers, RichUserProfile } from "@/types";
@@ -58,22 +58,18 @@ export async function POST(req: NextRequest) {
       interests: Interests;
     } = await req.json();
 
-    // Phase 1–3: Extract rich profile via Bedrock Claude
     const userInput = buildUserInput(cvData, answers);
 
-    const { text } = await generateText({
-      model: claudeSonnet,
-      system: PROFILE_EXTRACTION_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userInput }],
-    });
+    const text = await minimaxChat([
+      { role: "system", content: PROFILE_EXTRACTION_SYSTEM_PROMPT },
+      { role: "user", content: userInput },
+    ]);
 
     const richProfile: RichUserProfile = JSON.parse(text);
 
-    // Generate embedding from summary text
     const summaryText = buildSummaryForEmbedding(cvData, richProfile);
     const embedding = await generateEmbedding(summaryText);
 
-    // Upsert to Supabase
     const supabase = createServiceSupabaseClient();
 
     const { data, error } = await supabase

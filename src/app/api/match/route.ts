@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateText } from "ai";
-import { claudeSonnet } from "@/lib/ai";
+import { minimaxChat } from "@/lib/minimax";
 import { createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/supabase-server";
 
 export async function POST(req: NextRequest) {
@@ -9,7 +8,6 @@ export async function POST(req: NextRequest) {
     const supabase = await createServerSupabaseClient();
     const serviceSupabase = createServiceSupabaseClient();
 
-    // Fetch user profile with embedding
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("*")
@@ -31,7 +29,6 @@ export async function POST(req: NextRequest) {
 
     if (matchErr) throw matchErr;
 
-    // For each match, generate fit explanation with Bedrock Claude
     const recommendations = await Promise.all(
       (matches as { id: string; title: string; org: string; description: string; requirements: string[] }[]).slice(0, 10).map(async (opp) => {
         const profileSummary = `
@@ -40,9 +37,10 @@ Personality: ${JSON.stringify(profile.personality_traits)}
 Interests: ${JSON.stringify(profile.interests)}
         `.trim();
 
-        const { text } = await generateText({
-          model: claudeSonnet,
-          prompt: `Given this user profile:
+        const text = await minimaxChat([
+          {
+            role: "user",
+            content: `Given this user profile:
 ${profileSummary}
 
 And this opportunity:
@@ -58,7 +56,8 @@ Return ONLY valid JSON:
   "gaps": string (1-2 sentences on potential gaps),
   "actions": string[] (2-3 concrete steps to improve candidacy)
 }`,
-        });
+          },
+        ]);
 
         const fitData = JSON.parse(text);
 
@@ -70,14 +69,12 @@ Return ONLY valid JSON:
       })
     );
 
-    // Cache recommendations in Supabase (service role bypasses RLS)
     const { error: upsertErr } = await serviceSupabase
       .from("recommendations")
       .upsert(recommendations);
 
     if (upsertErr) throw upsertErr;
 
-    // Return with full opportunity data
     const { data: full } = await supabase
       .from("recommendations")
       .select("*, opportunity:opportunities(*)")
