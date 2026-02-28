@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
 import { claudeSonnet } from "@/lib/bedrock";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/supabase-server";
 import { ProfileInsights } from "@/types";
 
 export async function POST(req: NextRequest) {
@@ -52,8 +52,8 @@ Generate professional insights and return ONLY valid JSON:
 
     const insights: ProfileInsights = JSON.parse(text);
 
-    // Cache insights back on the profile
-    await supabase
+    // Cache insights back on the profile (service role bypasses RLS)
+    await createServiceSupabaseClient()
       .from("profiles")
       .update({ insights })
       .eq("user_id", userId);

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
 import { claudeSonnet } from "@/lib/bedrock";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createServerSupabaseClient, createServiceSupabaseClient } from "@/lib/supabase-server";
 
 export async function POST(req: NextRequest) {
   try {
     const { userId }: { userId: string } = await req.json();
     const supabase = await createServerSupabaseClient();
+    const serviceSupabase = createServiceSupabaseClient();
 
     // Fetch user profile with embedding
     const { data: profile, error: profileErr } = await supabase
@@ -69,8 +70,8 @@ Return ONLY valid JSON:
       })
     );
 
-    // Cache recommendations in Supabase
-    const { error: upsertErr } = await supabase
+    // Cache recommendations in Supabase (service role bypasses RLS)
+    const { error: upsertErr } = await serviceSupabase
       .from("recommendations")
       .upsert(recommendations);
 

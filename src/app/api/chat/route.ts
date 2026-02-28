@@ -52,6 +52,19 @@ Always personalise your responses to the user's actual profile and interests abo
           type: z.enum(["internship", "graduate_program", "fellowship", "volunteer", "full_time"]).optional(),
           industry: z.string().optional(),
         }),
+        execute: async ({ query, type, industry }) => {
+          let q = supabase
+            .from("opportunities")
+            .select("id, title, org, type, industry, location, description, deadline")
+            .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+
+          if (type) q = q.eq("type", type);
+          if (industry) q = q.ilike("industry", `%${industry}%`);
+
+          const { data, error } = await q.limit(5);
+          if (error) return { error: error.message };
+          return data ?? [];
+        },
       },
 
       explainRecommendation: {
@@ -59,9 +72,30 @@ Always personalise your responses to the user's actual profile and interests abo
         parameters: z.object({
           opportunityTitle: z.string().describe("Title of the opportunity to explain"),
         }),
+        execute: async ({ opportunityTitle }) => {
+          // Find the opportunity by title first
+          const { data: opp } = await supabase
+            .from("opportunities")
+            .select("id")
+            .ilike("title", `%${opportunityTitle}%`)
+            .limit(1)
+            .single();
+
+          if (!opp) return { error: "Opportunity not found" };
+
+          const { data, error } = await supabase
+            .from("recommendations")
+            .select("fit_score, fit_explanation, gaps, actions, opportunity:opportunities(*)")
+            .eq("user_id", userId)
+            .eq("opportunity_id", opp.id)
+            .single();
+
+          if (error) return { error: "Recommendation not found" };
+          return data;
+        },
       },
     },
   });
 
-  return result.toTextStreamResponse();
+  return result.toDataStreamResponse();
 }

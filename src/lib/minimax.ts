@@ -86,6 +86,10 @@ export async function minimaxTTS(text: string): Promise<string> {
     throw new Error(`MiniMax TTS failed: ${data.base_resp?.status_msg}`);
   }
 
-  // MiniMax returns audio as hex-encoded mp3; return the audio URL or data
-  return data.audio_file ?? data.data?.audio ?? "";
+  // MiniMax returns audio as hex-encoded mp3 in data.data.audio
+  const hexAudio = data.data?.audio as string | undefined;
+  if (!hexAudio) throw new Error("MiniMax TTS: no audio data in response");
+
+  const base64 = Buffer.from(hexAudio, "hex").toString("base64");
+  return `data:audio/mp3;base64,${base64}`;
 }
