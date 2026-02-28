@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { streamText, tool } from "ai";
 import { claudeSonnet } from "@/lib/bedrock";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { z } from "zod";
@@ -45,9 +45,9 @@ Always personalise your responses to the user's actual profile and interests abo
     system: systemPrompt,
     messages,
     tools: {
-      searchOpportunities: {
+      searchOpportunities: tool({
         description: "Search for Hong Kong opportunities matching specific criteria",
-        parameters: z.object({
+        inputSchema: z.object({
           query: z.string().describe("Search query, e.g. 'fintech internship' or 'NGO volunteer'"),
           type: z.enum(["internship", "graduate_program", "fellowship", "volunteer", "full_time"]).optional(),
           industry: z.string().optional(),
@@ -65,11 +65,11 @@ Always personalise your responses to the user's actual profile and interests abo
           if (error) return { error: error.message };
           return data ?? [];
         },
-      },
+      }),
 
-      explainRecommendation: {
+      explainRecommendation: tool({
         description: "Get detailed information about a specific recommendation",
-        parameters: z.object({
+        inputSchema: z.object({
           opportunityTitle: z.string().describe("Title of the opportunity to explain"),
         }),
         execute: async ({ opportunityTitle }) => {
@@ -93,9 +93,9 @@ Always personalise your responses to the user's actual profile and interests abo
           if (error) return { error: "Recommendation not found" };
           return data;
         },
-      },
+      }),
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }
