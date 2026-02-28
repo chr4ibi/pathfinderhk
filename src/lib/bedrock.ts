@@ -17,8 +17,9 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     "@aws-sdk/client-bedrock-runtime"
   );
 
+  // Titan Embed v1 is only available in us-east-1 / us-west-2, not ap-east-1
   const client = new BedrockRuntimeClient({
-    region: process.env.AWS_REGION ?? "ap-east-1",
+    region: "us-east-1",
     credentials: {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
